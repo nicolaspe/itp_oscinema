@@ -1,0 +1,3 @@
+[submodule "open-source-cinema"]
+	path = open-source-cinema
+	url = https://github.com/ITPNYU/open-source-cinema.git
