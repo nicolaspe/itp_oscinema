@@ -2,10 +2,12 @@
 let container, renderer, camera, scene;
 let controls, loader;
 var mouse, raycaster;
+var all_objects;
 // raycaster tracking
 var tracking = true;
 var sphere_tracker;
 // mlab variables
+let curr_user = "nico";
 let apiKey, db, coll;
 let num_objects = 0;
 
@@ -28,11 +30,15 @@ function onLoad(){
 	controls = new THREE.OrbitControls( camera );
 	controls.update();
 	loader = new THREE.TextureLoader();
-	createEnvironment();
 
   // more INITIALIZATION
+  all_objects = [];
   mouse = new THREE.Vector2();
   raycaster = new THREE.Raycaster();
+
+  // ELEMENTS INITIALIZATION
+  createEnvironment();
+  loadObjects();
 
   // event listeners
 	window.addEventListener('resize', onWindowResize, true );
@@ -40,6 +46,10 @@ function onLoad(){
   $("#sketch").on("drop", onDrop);
   $("#sketch").on("dragenter dragstart dragend dragleave dragover drag drop", function(e){
     e.preventDefault();
+    // get the mouse position in normalized coordinates
+    mouse.x =  (e.clientX / window.innerWidth) *2 -1;
+    mouse.y = -(e.clientY / window.innerHeight)*2 +1;
+    raycasting();
   });
 
 	animate();
@@ -77,7 +87,7 @@ function onDrop( event ){
 
   // create a new object with the new image!
   let obj_id = "ws" + num_objects;
-  createObject(obj_id, url, pos_x, pos_y, pos_z, -1, -1);
+  createObject(obj_id, url, pos_x, pos_y, pos_z, -1, -1, true);
 }
 
 
@@ -115,12 +125,17 @@ function raycasting(){
 
 
 // OBJECT FUNCTIONS
-function createObject(id, url, posX, posY, posZ, wid, hei){
-  // console.log("NEW: " + id +" | URL: " + url +" | POS :" + posX +", " + posY +", " + posZ);
-
+function createObject(id, url, posX, posY, posZ, wid, hei, is_new){
   // augment counter
   num_objects++;
 
+  // create new object for array
+  let new_obj = {};
+  new_obj.id  = id;
+  new_obj.url = url;
+  new_obj.x   = posX;
+  new_obj.y   = posY;
+  new_obj.z   = posZ;
 
   // load image and create element as callback
   loader.load(url, function(texture){
@@ -131,10 +146,12 @@ function createObject(id, url, posX, posY, posZ, wid, hei){
       transparent: true,
     });
     // create geometry
-    if(wid == -1){  // check if it's a new object (w = -1)
-      wid = Math.floor( texture.image.width  /50 );
-      hei = Math.floor( texture.image.height /50 );
+    if(wid == -1 || new_obj){  // check if it's a new object (w = -1)
+      wid = Math.floor( texture.image.width  /50 ); // scale
+      hei = Math.floor( texture.image.height /50 ); // image
     }
+    new_obj.wid = wid;
+    new_obj.hei = hei;
     let plane_mesh = new THREE.PlaneGeometry(wid, hei, 2, 2);
     // create mesh
     let obj = new THREE.Mesh(plane_mesh, plane_text);
@@ -142,6 +159,51 @@ function createObject(id, url, posX, posY, posZ, wid, hei){
     obj.position.set( posX, posY, posZ );
     // add to scene
     scene.add(obj);
+
+    // add to local list and db
+    all_objects.push( new_obj );
+    if( is_new ){ // only add to the db if it's a new element, and not loaded from the db
+      saveObject( new_obj );
+    }
+  });
+}
+function saveObject( obj ){
+  // add user data
+  obj.user = curr_user;
+  // parse data
+  let data = JSON.stringify( obj );
+  // create the query
+  let query = "q=" +JSON.stringify({ _id: obj.id }) + "&";
+  // send to mlab db
+  $.ajax({
+    url: "https://api.mlab.com/api/1/databases/" + CONFIG.MLAB_DB + "/collections/" + CONFIG.MLAB_COL + "/?" + query + "u=true&apiKey=" + CONFIG.MLAB_API,
+    data: data,
+    type: "PUT",
+    contentType: "application/json",
+    success: function(data){ console.log("object saved");   },
+    fialure: function(data){ console.log("ERR, not saved"); },
+  });
+}
+function loadObjects(){
+  // flush current list
+  for (let i = 0; i < all_objects.length; i++) {
+    all_objects[i].remove();
+  }
+  // get all the elements for the current user
+  let this_user = curr_user;
+  let query = JSON.stringify( {user: this_user} );
+  // ask the db for the thingies!
+  $.ajax({
+    url: "https://api.mlab.com/api/1/databases/" + CONFIG.MLAB_DB + "/collections/" + CONFIG.MLAB_COL + "/?q=" + query + "&apiKey=" + CONFIG.MLAB_API,
+    type: "GET",
+    contentType: "application/json",
+    // create each object we get
+    success: function(data){
+      console.log(data);
+      $.each(data, function(index, obj){
+        createObject(obj.id, obj.url, obj.x, obj.y, obj.z, obj.wid, obj.hei, false);
+      });
+    }
   });
 }
 
@@ -159,7 +221,7 @@ function createEnvironment(){
 	scene.add(skydome);
 
   // tracker sphere
-  let tr_geo = new THREE.SphereGeometry(1, 8, 8);
+  let tr_geo = new THREE.SphereGeometry(0.3, 4, 4);
   let tr_mat = new THREE.MeshBasicMaterial({
     color: 0xf998b0,
   });
