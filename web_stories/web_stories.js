@@ -211,11 +211,13 @@ function loadObjects(){
 // ENVIRONMENT
 function createEnvironment(){
 	// SKYDOME
-	let sky_geo = new THREE.SphereGeometry(600, 24, 24);
+	let sky_geo = new THREE.SphereGeometry(500, 24, 24);
+	// let sky_map = loader.load("https://raw.githubusercontent.com/ITPNYU/open-source-cinema/master/osc_setting/ruin.jpg");
+	let sky_map = loader.load("pano/PANO_montreal.jpg");
 	let sky_mat = new THREE.MeshBasicMaterial({
-		color: 0xffffff,
+		map: sky_map,
 		side: THREE.DoubleSide,
-		wireframe: true,
+		// wireframe: true,
 	});
 	var skydome = new THREE.Mesh(sky_geo, sky_mat);
 	scene.add(skydome);
