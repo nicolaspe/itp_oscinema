@@ -1,13 +1,15 @@
 // threejs variables
-let container, renderer, camera, scene;
+let container, renderer, scene;
+var camera;
 let controls, loader;
-var mouse, raycaster;
-var all_objects;
+let mouse, raycaster;
+let all_objects;
 // raycaster tracking
-var tracking = true;
-var sphere_tracker;
+let tracking = true;
+let sphere_tracker;
 // mlab variables
-let curr_user = "nico";
+let curr_user  = "nico";
+let curr_scene = 0;
 let apiKey, db, coll;
 let num_objects = 0;
 
@@ -25,7 +27,7 @@ function onLoad(){
 	container.appendChild(renderer.domElement);
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color( 0x101010 );
-	camera = new THREE.PerspectiveCamera(80, wid/hei, 0.1, 8000);
+	camera = new THREE.PerspectiveCamera(50, wid/hei, 0.1, 8000);
 	camera.position.set(0, 0, 10);
 	controls = new THREE.OrbitControls( camera );
 	controls.update();
@@ -38,6 +40,7 @@ function onLoad(){
 
   // ELEMENTS INITIALIZATION
   createEnvironment();
+	loadCamera();
   loadObjects();
 
   // event listeners
@@ -51,6 +54,7 @@ function onLoad(){
     mouse.y = -(e.clientY / window.innerHeight)*2 +1;
     raycasting();
   });
+	$("#sketch").on("mouseup", saveCamera);
 
 	animate();
 }
@@ -170,6 +174,7 @@ function createObject(id, url, posX, posY, posZ, wid, hei, is_new){
 function saveObject( obj ){
   // add user data
   obj.user = curr_user;
+	obj.scene = curr_scene;
   // parse data
   let data = JSON.stringify( obj );
   // create the query
@@ -190,8 +195,9 @@ function loadObjects(){
     all_objects[i].remove();
   }
   // get all the elements for the current user
-  let this_user = curr_user;
-  let query = JSON.stringify( {user: this_user} );
+	let this_user  = curr_user;
+  let this_scene = curr_scene;
+  let query = JSON.stringify( {user: this_user, scene: this_scene} );
   // ask the db for the thingies!
   $.ajax({
     url: "https://api.mlab.com/api/1/databases/" + CONFIG.MLAB_DB + "/collections/" + CONFIG.MLAB_COL + "/?q=" + query + "&apiKey=" + CONFIG.MLAB_API,
@@ -199,7 +205,7 @@ function loadObjects(){
     contentType: "application/json",
     // create each object we get
     success: function(data){
-      console.log(data);
+      // console.log(data);
       $.each(data, function(index, obj){
         createObject(obj.id, obj.url, obj.x, obj.y, obj.z, obj.wid, obj.hei, false);
       });
@@ -208,12 +214,70 @@ function loadObjects(){
 }
 
 
+// SCENE & CAMERA SETTINGS
+function saveCamera(){
+	// create object to store
+	let camera_data = {}
+	// fill the data
+	camera_data.user  = curr_user;
+	camera_data.scene = curr_scene;
+	camera_data.type  = "camera";
+	camera_data.cam_matrix = camera.matrix.toArray();
+	camera_data.cam_fov    = camera.fov;
+	camera_data.cam_focus  = camera.focus;
+	camera_data.cam_zoom   = camera.zoom;
+	// parse data
+	let data = JSON.stringify(camera_data);
+	// create the query
+	let this_user  = curr_user;
+	let this_scene = curr_scene;
+	let query = "q=" +JSON.stringify({ user: this_user, scene: this_scene, type: "camera" }) + "&";
+  // send to mlab db
+  $.ajax({
+    url: "https://api.mlab.com/api/1/databases/" + CONFIG.MLAB_DB + "/collections/" + CONFIG.MLAB_COL + "/?" + query + "u=true&apiKey=" + CONFIG.MLAB_API,
+    data: data,
+    type: "PUT",
+    contentType: "application/json",
+    success: function(data){ console.log("camera saved"); },
+    fialure: function(data){ console.log("ERR, cam not saved"); },
+  });
+}
+function loadCamera(){
+	// get the camera for the current user
+	let this_user  = curr_user;
+	let this_scene = curr_scene;
+	let query = JSON.stringify( { type: "camera", user: curr_user, scene: curr_scene } );
+	// ask the db for the thingies!
+	$.ajax({
+		url: "https://api.mlab.com/api/1/databases/" + CONFIG.MLAB_DB + "/collections/" + CONFIG.MLAB_COL + "/?q=" + query + "&apiKey=" + CONFIG.MLAB_API,
+		type: "GET",
+		contentType: "application/json",
+		// load the camera with the received information
+		success: function(data){
+			$.each(data, function(index, obj){
+				if(obj.type == "camera"){
+					console.log("camera!")
+					console.log(obj);
+					camera.matrix.fromArray(obj.cam_matrix);
+					camera.matrix.decompose(camera.position, camera.quaternion, camera.scale);
+					camera.fov   = obj.cam_fov;
+					camera.focus = obj.cam_focus;
+					camera.zoom  = obj.cam_zoom;
+					camera.updateProjectionMatrix();
+				}
+			});
+			console.log("camera loaded");
+		}
+	});
+}
+
+
 // ENVIRONMENT
 function createEnvironment(){
 	// SKYDOME
-	let sky_geo = new THREE.SphereGeometry(500, 24, 24);
-	// let sky_map = loader.load("https://raw.githubusercontent.com/ITPNYU/open-source-cinema/master/osc_setting/ruin.jpg");
-	let sky_map = loader.load("pano/PANO_montreal.jpg");
+	let sky_geo = new THREE.SphereGeometry(600, 24, 24);
+	// let sky_map = loader.load("https://raw.githubusercontent.com/nicolaspe/itp_oscinema/master/web_stories/pano/PANO_montreal.jpg");
+	let sky_map = loader.load("pano/RICOH_out.jpg");
 	let sky_mat = new THREE.MeshBasicMaterial({
 		map: sky_map,
 		side: THREE.DoubleSide,
