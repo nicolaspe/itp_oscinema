@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css?family=Lato|Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i');
+
+html {}
+
+body {
+  font-family: monospace;
+  font-weight: lighter;
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+#sketch {
+  cursor: none;
+}
+
+
+.button {
+  background: #000;
+  color: #fff;
+  font-family: monospace;
+  /* font-family: "Lato", Helvetica, Arial, sans-serif; */
+  font-weight: 100;
+  border-color: #8B33A6;
+  margin-bottom: 2px;
+}
+.button:hover {
+  color: #8B33A6;
+}
+
+
+.menu {
+  position: absolute;
+  padding: 10px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  z-index: 2;
+}
+
+
+#controls {
+  top: 0px;
+  left: 0px;
+  padding: 8px 15px 8px 15px;
+  width: 100%;
+}
+#controls ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#controls li {
+  display: inline-block;
+  padding-right: 10px;
+}
+
+
+#menu_object {
+  text-align: left;
+  padding: 15px 5px 8px 20px;
+  top: 85%;
+  height: 15%;
+  visibility: hidden;
+}
+#menu_object p {
+  margin: 0 0 8px 0;
+}
+#menu_object td {
+  width: 200px;
+}
+.obj_txt_title {
+  font-weight: bold;
+}
+.obj_txt_cont ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.obj_txt_cont li {
+  padding: 0;
+}
+
+
+#menu_user {
+  top: 40%;
+  left: 30%;
+  width: 40%;
+  height: 20%;
+  visibility: hidden;
+}
+#menu_background {
+  top: 40%;
+  left: 30%;
+  width: 40%;
+  height: 20%;
+  visibility: hidden;
+}

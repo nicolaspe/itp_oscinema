@@ -3,23 +3,71 @@
   <head>
     <meta charset="utf-8">
     <title>web stories</title>
+    <link rel="stylesheet" href="stories.css">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/91/three.min.js"></script>
     <script src="OrbitControls.js"></script>
     <script src="keys.js"></script>
-
-    <style>
-      body {
-        margin: 0;
-        overflow: hidden;
-        cursor: none;
-      }
-    </style>
   </head>
 
   <body>
+    <div class="menu" id="controls">
+      <ul>
+        <li>user:
+          <span id="label_user">x</span>
+          <input type="button" class="button" id="button_user" value="change user">
+        </li>
+        <li> | </li>
+        <li>scene:
+          <input type="button" class="button" id="button_scn_prev" value="<"> <span id="label_scene">x</span>
+          <input type="button" class="button" id="button_scn_next" value=">">
+        </li>
+        <!-- <li> | </li>
+        <li> | </li> -->
+      </ul>
+    </div>
+
+    <div class="menu" id="menu_user">
+      <br>  <p>enter username</p>
+      <p> <input type="text" id="input_username" value=""> </p> <br>
+      <p> <input type="button" class="button" id="button_user_submit" value="submit"> &nbsp;&nbsp; <input type="button" class="button" id="button_user_x" value="cancel"> </p>
+    </div>
+
+    <div class="menu" id="menu_background">
+      <p>blah</p>
+    </div>
+
+    <div class="menu" id="menu_object">
+      <table>
+        <tr>
+          <td class="obj_txt_title">
+            <p>Object <span  id="label_obj_name"></span> </p>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="obj_txt_cont">
+            <span class="obj_txt_title">Position</span>
+            <ul>
+              <li>coord x: <span id="label_obj_posx"></span> </li>
+              <li>coord y: <span id="label_obj_posy"></span> </li>
+              <li>coord z: <span id="label_obj_posz"></span> </li>
+            </ul>
+          </td>
+          <td class="obj_txt_cont">
+            <span class="obj_txt_title">Rotation</span>
+            <ul>
+              <li>rot x: <span id="label_obj_rotx"></span> </li>
+              <li>rot y: <span id="label_obj_roty"></span> </li>
+              <li>rot z: <span id="label_obj_rotz"></span> </li>
+            </ul>
+          </td>
+        </tr>
+      </table>
+    </div>
+
     <div id="sketch"></div>
 
     <script src="web_stories.js"></script>
